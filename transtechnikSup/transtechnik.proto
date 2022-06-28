@@ -1,0 +1,29 @@
+OutTerminator = CR;
+InTerminator = CR;
+
+power {
+    out "ADR \$1";
+    out "%{F|N}";
+}
+
+reset {
+    out "ADR \$1";
+    out "RS";
+}
+
+set_da {
+    out "ADR \$1";
+    out "DA \$2 %d";
+}
+
+get_ad {
+    out "ADR \$1";
+    out "AD \$2";
+    in "%d";
+}
+
+get_stat {
+    out "ADR \$1";
+    out "S1";
+    in "%B!.";
+}
