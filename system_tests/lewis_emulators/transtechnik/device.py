@@ -4,6 +4,41 @@ from .states import DefaultState
 from collections import OrderedDict
 
 
+INTERLOCKS = [
+    "power_on_cmd",
+    "pm1_error",
+    "pm2_error",
+    "pm3_error",
+    "pm4_error",
+    "pm5_error",
+    "in_error",
+    "ru_error",
+    "pm1_warning",
+    "pm2_warning",
+    "pm3_warning",
+    "pm4_warning",
+    "pm5_warning",
+    "in_warning",
+    "ru_warning",
+    "is_remote",
+    "magnet_temp_interlock",
+    "magnet_water_interlock",
+    "interlock_bps1",
+    "interlock_bps2",
+    "interlock_pps1",
+    "interlock_pps2",
+    "interlock_spare1",
+    "interlock_spare2",
+    "output_overvoltage",
+    "output_overcurrent",
+    "output_unbalanced",
+    "em_stop",
+    "door_open",
+    "control_switch",
+    "self_test_failed",
+]
+
+
 class Supply:
     def __init__(self):
         self.power = False
@@ -11,27 +46,15 @@ class Supply:
         self.current = 0
         self.voltage = 0
 
-        self.fullscale_volts = 100
-        self.fullscale_amps = 500
+        self.fullscale_voltage = 150
+        self.fullscale_current = 500
+
+        self.power = False
+
+        self.interlocks = {key: False for key in INTERLOCKS}
 
     def reset(self):
         pass
-
-    def set_dac(self, adc_num, value):
-        if adc_num == 0:
-            self.current = (value / 1000000) * self.fullscale_amps
-        elif adc_num == 1:
-            self.voltage = (value / 1000000) * self.fullscale_volts
-        else:
-            raise ValueError(f"Unknown dac {adc_num}")
-
-    def read_adc(self, adc_num):
-        if adc_num == 0:
-            return int((self.current / self.fullscale_amps) * 1000000)
-        elif adc_num == 1:
-            return int((self.voltage / self.fullscale_volts) * 1000000)
-        else:
-            raise ValueError(f"Unknown adc {adc_num}")
 
 
 @has_log
@@ -67,5 +90,12 @@ class SimulatedTranstechnik(StateMachineDevice):
                              f"(address {self.address}, available {self.supplies.keys()}")
         return self.supplies[self.address]
 
-    def set_interlock(self, addr, status):
-        self.supplies[addr].interlock = status
+    def set_voltage(self, addr, voltage):
+        self.supplies[addr].voltage = voltage
+
+    def set_property(self, addr, prop, val):
+        setattr(self.supplies[addr], prop, val)
+
+    def set_interlock(self, addr, key, val):
+        assert key in INTERLOCKS
+        self.supplies[addr].interlocks[key] = val

@@ -17,103 +17,122 @@ record(bo, "$(P)SIM"){
 }
 
 record(ao, "$(P)VOLT:FULLSCALE") {
+    field(DESC, "Full-scale voltage")
     field(VAL, "$(VOLT_FULLSCALE)")
     field(PINI, "YES")
+    field(EGU, "V")
+    field(ASG, "READONLY")
+    info(archive, "VAL")
 }
 
 record(ao, "$(P)CURR:FULLSCALE") {
+    field(DESC, "Full-scale current")
     field(VAL, "$(CURR_FULLSCALE)")
     field(PINI, "YES")
+    field(EGU, "A")
+    field(ASG, "READONLY")
+    info(archive, "VAL")
 }
 
 record(bo, "$(P)POWER:SP") {
-    field(ZNAM, "OFF")
-    field(ONAM, "ON")
+    field(DESC, "PSU power setpoint")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
     field(DTYP, "stream")
     field(OUT, "@transtechnik.proto power($(PS_ADDR)) $(PORT)")
+    field(SDIS, "$(P)DISABLE")
+}
+
+record(calc, "$(P)POWER:_CALC") {
+    # Invert power so that we get a logical 1=On, 0=Off
+    field(INPA, "$(P)STATUS.B1F CP MSS")
+    field(CALC, "!A")
 }
 
 record(bi, "$(P)POWER") {
-    field(ZNAM, "OFF")
-    field(ONAM, "ON")
-	field(INP, "$(P)STATUS.B0 CP MSS")
-	info(interest, "HIGH")
+    field(DESC, "PSU power readback")
+    field(INP, "$(P)POWER:_CALC CP MSS")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    info(archive, "VAL")
+    info(interest, "HIGH")
 }
 
 record(bo, "$(P)RESET") {
+    field(DESC, "Reset interlocks")
     field(ZNAM, "OFF")
     field(ONAM, "ON")
     field(DTYP, "stream")
     field(OUT, "@transtechnik.proto reset($(PS_ADDR)) $(PORT)")
+    field(SDIS, "$(P)DISABLE")
 }
 alias("$(P)RESET", "$(P)RESET:SP")
 
 record(longin, "$(P)VOLT:RAW") {
     field(DTYP, "stream")
     field(SCAN, "1 second")
-    field(INP, "@transtechnik.proto get_ad($(PS_ADDR), 1) $(PORT)")
+    field(INP, "@transtechnik.proto get_volt($(PS_ADDR)) $(PORT)")
     field(EGU, "ppm")
-    field(SIML, "$(P)SIM")
-    field(SIOL, "$(P)SIM:VOLT:RAW")
     field(SDIS, "$(P)DISABLE")
+    info(archive, "VAL")
 }
 
 record(calc, "$(P)VOLT") {
     field(INPA, "$(P)VOLT:RAW CP MSS")
     field(INPB, "$(P)VOLT:FULLSCALE CP MSS")
-    field(CALC, "(A/1000000)*B")
+    field(CALC, "(A/100000)*B")
     field(ASG, "READONLY")
     field(EGU, "V")
 	field(PREC, "3")
     info(interest, "HIGH")
-}
-
-record(ao, "$(P)VOLT:SP") {
-    field(EGU, "V")
-	field(PREC, "3")
-    field(FLNK, "$(P)VOLT:SP:_CALC")
-}
-
-record(calcout, "$(P)VOLT:SP:_CALC") {
-    field(INPA, "$(P)VOLT:SP")
-    field(INPB, "$(P)VOLT:FULLSCALE")
-    field(CALC, "(A/B)*1000000")
-    field(OUT, "$(P)VOLT:SP:_RAW PP")
-}
-
-record(longout, "$(P)VOLT:SP:_RAW") {
-    field(DTYP, "stream")
-    field(OUT, "@transtechnik.proto set_da($(PS_ADDR), 1) $(PORT)")
-    field(EGU, "ppm")
-    field(SIML, "$(P)SIM")
-    field(SIOL, "$(P)SIM:VOLT:RAW")
-    field(SDIS, "$(P)DISABLE")
+    info(archive, "VAL")
 }
 
 record(longin, "$(P)CURR:RAW") {
     field(DTYP, "stream")
     field(SCAN, "1 second")
-    field(INP, "@transtechnik.proto get_ad($(PS_ADDR), 0) $(PORT)")
-    field(EGU, "ppm")
-    field(SIML, "$(P)SIM")
-    field(SIOL, "$(P)SIM:CURR:RAW")
+    field(INP, "@transtechnik.proto get_curr($(PS_ADDR)) $(PORT)")
+    field(EGU, "pp100k")
     field(SDIS, "$(P)DISABLE")
+    info(archive, "VAL")
 }
 
 record(calc, "$(P)CURR") {
     field(INPA, "$(P)CURR:RAW CP MSS")
     field(INPB, "$(P)CURR:FULLSCALE CP MSS")
-    field(CALC, "(A/1000000)*B")
+    field(CALC, "(A/100000)*B")
     field(ASG, "READONLY")
     field(EGU, "A")
 	field(PREC, "3")
     info(interest, "HIGH")
+    info(archive, "VAL")
+}
+
+record(longin, "$(P)CURR:SP:RBV:RAW") {
+    field(DTYP, "stream")
+    field(SCAN, "1 second")
+    field(INP, "@transtechnik.proto get_curr_sp($(PS_ADDR)) $(PORT)")
+    field(EGU, "pp100k")
+    field(SDIS, "$(P)DISABLE")
+    info(archive, "VAL")
+}
+
+record(calc, "$(P)CURR:SP:RBV") {
+    field(INPA, "$(P)CURR:RAW CP MSS")
+    field(INPB, "$(P)CURR:FULLSCALE CP MSS")
+    field(CALC, "(A/100000)*B")
+    field(ASG, "READONLY")
+    field(EGU, "A")
+	field(PREC, "3")
+    info(interest, "HIGH")
+    info(archive, "VAL")
 }
 
 record(ao, "$(P)CURR:SP") {
     field(EGU, "A")
 	field(PREC, "3")
     field(FLNK, "$(P)CURR:SP:_CALC")
+    info(archive, "VAL")
 }
 
 record(calcout, "$(P)CURR:SP:_CALC") {
@@ -125,47 +144,23 @@ record(calcout, "$(P)CURR:SP:_CALC") {
 
 record(longout, "$(P)CURR:SP:_RAW") {
     field(DTYP, "stream")
-    field(OUT, "@transtechnik.proto set_da($(PS_ADDR), 0) $(PORT)")
+    field(OUT, "@transtechnik.proto set_curr($(PS_ADDR)) $(PORT)")
     field(EGU, "ppm")
-    field(SIML, "$(P)SIM")
-    field(SIOL, "$(P)SIM:CURR:RAW")
     field(SDIS, "$(P)DISABLE")
 }
 
-
 record(mbbiDirect, "$(P)STATUS") {
+    field(DESC, "Power supply raw status bits")
     field(SCAN, "1 second")
 	field(DTYP, "stream")
 	field(INP, "@transtechnik.proto get_stat($(PS_ADDR)) $(PORT)")
-	# BF = ?
-	# BE = ?
-	# BD = ?
-	# BC = ?
-	# BB = ?
-	# BA = ?
-	# B9 = ?
-	# B8 = ?
-	# B7 = ?
-	# B6 = ?
-	# B5 = ?
-	# B4 = ?
-	# B3 = ?
-	# B2 = ?
-	# B1 = ?
-	# B0 = ?
+    field(SDIS, "$(P)DISABLE")
 }
 
-record(bi, "$(P)INTERLOCK") {
-    field(ZNAM, "Inactive")
-    field(ONAM, "Active")
-	field(INP, "$(P)STATUS.B1 CP MSS")
-	info(interest, "HIGH")
+record(bi, "$(P)MODE") {
+    field(INP, "$(P)STATUS.BF CP MSS")
+    field(ZNAM, "Local")
+    field(ONAM, "Remote")
+    info(archive, "VAL")
+    info(interest, "HIGH")
 }
-
-
-#
-# Simulation records
-#
-
-record(ao, "$(P)SIM:VOLT:RAW") {}
-record(ao, "$(P)SIM:CURR:RAW") {}

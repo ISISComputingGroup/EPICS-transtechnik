@@ -12,7 +12,7 @@ DEVICE_PREFIX = "TRANTECH_01"
 
 EMULATOR_DEVICE = "transtechnik"
 
-VOLT_FULLSCALE = 125
+VOLT_FULLSCALE = 150
 CURR_FULLSCALE = 500
 
 IOCS = [
@@ -28,7 +28,40 @@ IOCS = [
     },
 ]
 
-TEST_MODES = [TestModes.DEVSIM, TestModes.RECSIM]
+INTERLOCKS = [
+    ("power_on_cmd", "POWER_REQ"),
+    ("pm1_error", "PM1_ERR"),
+    ("pm2_error", "PM2_ERR"),
+    ("pm3_error", "PM3_ERR"),
+    ("pm4_error", "PM4_ERR"),
+    ("pm5_error", "PM5_ERR"),
+    ("in_error", "IN_ERR"),
+    ("ru_error", "RU_ERR"),
+    ("pm1_warning", "PM1_WARN"),
+    ("pm2_warning", "PM2_WARN"),
+    ("pm3_warning", "PM3_WARN"),
+    ("pm4_warning", "PM4_WARN"),
+    ("pm5_warning", "PM5_WARN"),
+    ("in_warning", "IN_WARN"),
+    ("ru_warning", "RU_WARN"),
+    ("magnet_temp_interlock", "ILK:MAGNET_TEMP"),
+    ("magnet_water_interlock", "ILK:MAGNET_WATER"),
+    ("interlock_bps1", "ILK:BPS1"),
+    ("interlock_bps2", "ILK:BPS2"),
+    ("interlock_pps1", "ILK:PPS1"),
+    ("interlock_pps2", "ILK:PPS2"),
+    ("interlock_spare1", "ILK:SPARE1"),
+    ("interlock_spare2", "ILK:SPARE2"),
+    ("output_overvoltage", "OUTPUT:OVERVOLTAGE"),
+    ("output_overcurrent", "OUTPUT:OVERCURRENT"),
+    ("output_unbalanced", "OUTPUT:UNBALANCED"),
+    ("em_stop", "ILK:EM_STOP"),
+    ("door_open", "ILK:DOOR"),
+    ("control_switch", "ILK:CONTROL_SWITCH"),
+    ("self_test_failed", "ILK:SELF_TEST"),
+]
+
+TEST_MODES = [TestModes.DEVSIM]
 
 TEST_VOLTAGES = [0, 0.1, VOLT_FULLSCALE/2, VOLT_FULLSCALE]
 TEST_CURRENTS = [0, 0.1, CURR_FULLSCALE/2, CURR_FULLSCALE]
@@ -43,28 +76,35 @@ class TranstechnikTests(unittest.TestCase):
         self.ca.assert_that_pv_is_number("CURR:FULLSCALE", CURR_FULLSCALE, tolerance=0.01)
         self.ca.assert_that_pv_exists("DISABLE", timeout=30)
 
-    def test_disable_exists(self):
-        self.ca.assert_that_pv_is("DISABLE", "COMMS ENABLED")
-
     @parameterized.expand(parameterized_list(TEST_VOLTAGES))
-    def test_WHEN_voltage_is_set_THEN_voltage_updates(self, _, val):
-        self.ca.set_pv_value("VOLT:SP", val)
+    @skip_if_recsim("requires backdoor")
+    def test_WHEN_voltage_is_set_via_backdoor_THEN_voltage_updates(self, _, val):
+        self._lewis.backdoor_run_function_on_device("set_voltage", [0, val])
         self.ca.assert_that_pv_is_number("VOLT", val, tolerance=0.01)
 
     @parameterized.expand(parameterized_list(TEST_CURRENTS))
-    def test_WHEN_curr_is_set_THEN_voltage_updates(self, _, val):
+    @skip_if_recsim("Requires scaling logic not implemented in recsim")
+    def test_WHEN_curr_is_set_THEN_current_updates(self, _, val):
         self.ca.set_pv_value("CURR:SP", val)
         self.ca.assert_that_pv_is_number("CURR", val, tolerance=0.01)
 
+    @parameterized.expand(parameterized_list(TEST_CURRENTS))
+    @skip_if_recsim("Requires scaling logic not implemented in recsim")
+    def test_WHEN_curr_is_set_THEN_current_sp_rbv_updates(self, _, val):
+        self.ca.set_pv_value("CURR:SP", val)
+        self.ca.assert_that_pv_is_number("CURR:SP:RBV", val, tolerance=0.01)
+
     @contextlib.contextmanager
     def _disconnect_device(self):
-        self._lewis.backdoor_set_and_assert_set("connected", False)
+        self._lewis.backdoor_set_on_device("connected", False)
         try:
             yield
         finally:
-            self._lewis.backdoor_set_and_assert_set("connected", True)
+            self._lewis.backdoor_set_on_device("connected", True)
 
-    @parameterized.expand(parameterized_list(["VOLT", "CURR", "VOLT:RAW", "CURR:RAW", "STATUS"]))
+    @parameterized.expand(parameterized_list(
+        ["VOLT", "CURR", "VOLT:RAW", "CURR:RAW", "STATUS"] + [pv for _, pv in INTERLOCKS]
+    ))
     @skip_if_recsim("testing disconnection requires emulator")
     def test_WHEN_device_disconnected_THEN_pvs_in_alarm(self, _, pv):
         self.ca.assert_that_pv_alarm_is(pv, self.ca.Alarms.NONE)
@@ -74,20 +114,33 @@ class TranstechnikTests(unittest.TestCase):
 
         self.ca.assert_that_pv_alarm_is(pv, self.ca.Alarms.NONE, timeout=15)
 
+    @parameterized.expand(parameterized_list(INTERLOCKS))
     @skip_if_recsim("status bits do not change in recsim")
-    def test_WHEN_power_is_set_THEN_status_bit_changes(self):
-        self.ca.set_pv_value("POWER:SP", "On")
-        # Don't yet know *which* status bit refers to POWER - guess B0 for the moment.
-        self.ca.assert_that_pv_is("STATUS.B0", "1")
+    def test_WHEN_interlock_is_set_THEN_status_bit_changes(self, _, emulator_name, pv_name):
+        self._lewis.backdoor_run_function_on_device("set_interlock", [0, emulator_name, True])
+        self.ca.assert_that_pv_is(pv_name, "Tripped")
 
-        self.ca.set_pv_value("POWER:SP", "Off")
-        self.ca.assert_that_pv_is("STATUS.B0", "0")
+        self._lewis.backdoor_run_function_on_device("set_interlock", [0, emulator_name, False])
+        self.ca.assert_that_pv_is(pv_name, "Ok")
 
     @skip_if_recsim("status bits do not change in recsim")
     def test_WHEN_interlock_is_set_THEN_status_bit_changes(self):
-        self._lewis.backdoor_run_function_on_device("set_interlock", [0, True])
-        # Don't yet know *which* status bit refers to interlock(s) - guess B1 for the moment.
-        self.ca.assert_that_pv_is("STATUS.B1", "1")
+        self._lewis.backdoor_run_function_on_device("set_interlock", [0, "is_remote", True])
+        self.ca.assert_that_pv_is("MODE", "Remote")
 
-        self.ca.process_pv("RESET")
-        self.ca.assert_that_pv_is("STATUS.B1", "0")
+        self._lewis.backdoor_run_function_on_device("set_interlock", [0, "is_remote", False])
+        self.ca.assert_that_pv_is("MODE", "Local")
+
+    @skip_if_recsim("Requires backdoor")
+    def test_WHEN_power_on_via_backdoor_THEN_power_pv_is_on(self):
+        self._lewis.backdoor_run_function_on_device("set_property", [0, "power", True])
+        self.ca.assert_that_pv_is("POWER", "On")
+        self._lewis.backdoor_run_function_on_device("set_property", [0, "power", False])
+        self.ca.assert_that_pv_is("POWER", "Off")
+
+    @skip_if_recsim("Requires interpreting status bits, not easy in recsim")
+    def test_WHEN_set_power_THEN_power_updates(self):
+        self.ca.set_pv_value("POWER:SP", "On")
+        self.ca.assert_that_pv_is("POWER", "On")
+        self.ca.set_pv_value("POWER:SP", "Off")
+        self.ca.assert_that_pv_is("POWER", "Off")

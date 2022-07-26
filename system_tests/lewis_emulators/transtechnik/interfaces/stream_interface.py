@@ -2,18 +2,21 @@ from lewis.adapters.stream import StreamInterface
 from lewis.utils.command_builder import CmdBuilder
 from lewis.core.logging import has_log
 from lewis.utils.replies import conditional_reply
+from ..device import INTERLOCKS
 
 
 @has_log
 class TranstechnikStreamInterface(StreamInterface):
     commands = {
-        CmdBuilder("set_adr").escape("ADR ").int().build(),
-        CmdBuilder("off").escape("F").build(),
-        CmdBuilder("on").escape("N").build(),
-        CmdBuilder("read_adc").escape("AD ").int().build(),
-        CmdBuilder("set_dac").escape("DA ").int().escape(" ").int().build(),
-        CmdBuilder("get_status").escape("S1").build(),
-        CmdBuilder("reset").escape("RS").build(),
+        CmdBuilder("set_adr").escape("ADR ").int().eos().build(),
+        CmdBuilder("off").escape("F").eos().build(),
+        CmdBuilder("on").escape("N").eos().build(),
+        CmdBuilder("read_curr").escape("AD 1").eos().build(),
+        CmdBuilder("read_volt").escape("AD 2").eos().build(),
+        CmdBuilder("read_curr_sp").escape("RA").eos().build(),
+        CmdBuilder("set_curr").escape("WA ").int().eos().build(),
+        CmdBuilder("get_status").escape("S0").eos().build(),
+        CmdBuilder("reset").escape("RS").eos().build(),
     }
 
     in_terminator = "\r"
@@ -24,7 +27,7 @@ class TranstechnikStreamInterface(StreamInterface):
 
     @conditional_reply("connected")
     def set_adr(self, adr):
-        self.device.address = adr
+        self.device.address = int(adr)
 
     @conditional_reply("connected")
     def off(self):
@@ -39,26 +42,32 @@ class TranstechnikStreamInterface(StreamInterface):
         self.device.supply().reset()
 
     @conditional_reply("connected")
-    def read_adc(self, adc_num):
-        return self.device.supply().read_adc(adc_num)
+    def read_curr(self):
+        return int((self.device.supply().current / self.device.supply().fullscale_current) * 100_000.)
 
     @conditional_reply("connected")
-    def set_dac(self, dac_num, val):
-        self.device.supply().set_dac(dac_num, val)
+    def read_volt(self):
+        return int((self.device.supply().voltage / self.device.supply().fullscale_voltage) * 100_000.)
+
+    @conditional_reply("connected")
+    def read_curr_sp(self):
+        return int((self.device.supply().current / self.device.supply().fullscale_current) * 100_000.)
+
+    @conditional_reply("connected")
+    def set_curr(self, val):
+        self.device.supply().current = (val / 1_000_000.) * self.device.supply().fullscale_current
 
     @conditional_reply("connected")
     def get_status(self):
         def bit_to_str(b):
-            return "." if b else "!"
+            return "!" if b else "."
 
-        # Currently do not know what the status bits represent or what order they're in. Take a guess below and
-        # update once we've tested with hardware.
-        reply = "".join(bit_to_str(b) for b in [
-            self.device.supply().interlock,
-            self.device.supply().power,
-        ])
+        vals = [not self.device.supply().power] + [self.device.supply().interlocks[k] for k in INTERLOCKS]
+        reply = "".join(bit_to_str(b) for b in vals)
+        print(f"status reply: {reply}")
         return reply
 
     @conditional_reply("connected")
     def reset(self):
-        self.device.supply().interlock = False
+        for ilk in INTERLOCKS:
+            self.device.supply().interlocks[ilk] = False
