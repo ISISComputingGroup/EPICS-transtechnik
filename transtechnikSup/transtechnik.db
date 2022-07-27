@@ -38,6 +38,14 @@ record(bo, "$(P)POWER:SP") {
     field(DESC, "PSU power setpoint")
     field(ZNAM, "Off")
     field(ONAM, "On")
+	field(FLNK, "$(P)POWER:SP:PROC_CNT")  # Will eventually cause statemachine to propagate this to POWER:SP:_RAW
+	field(UDFS, "NO_ALARM")
+}
+
+record(bo, "$(P)POWER:SP:_RAW") {
+    field(DESC, "PSU power setpoint")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
     field(DTYP, "stream")
     field(OUT, "@transtechnik.proto power($(PS_ADDR)) $(PORT)")
     field(SDIS, "$(P)DISABLE")
@@ -62,11 +70,19 @@ record(bo, "$(P)RESET") {
     field(DESC, "Reset interlocks")
     field(ZNAM, "OFF")
     field(ONAM, "ON")
+	field(UDFS, "NO_ALARM")
+	field(FLNK, "$(P)RESET:PROC_CNT")  # Will eventually cause statemachine to propagate this to RESET:RAW
+}
+alias("$(P)RESET", "$(P)RESET:SP")
+
+record(bo, "$(P)RESET:_RAW") {
+    field(DESC, "Reset interlocks")
+    field(ZNAM, "OFF")
+    field(ONAM, "ON")
     field(DTYP, "stream")
     field(OUT, "@transtechnik.proto reset($(PS_ADDR)) $(PORT)")
     field(SDIS, "$(P)DISABLE")
 }
-alias("$(P)RESET", "$(P)RESET:SP")
 
 record(longin, "$(P)VOLT:RAW") {
     field(DTYP, "stream")
@@ -133,13 +149,14 @@ record(ao, "$(P)CURR:SP") {
 	field(PREC, "3")
     field(FLNK, "$(P)CURR:SP:_CALC")
     info(archive, "VAL")
+	field(UDFS, "NO_ALARM")
 }
 
 record(calcout, "$(P)CURR:SP:_CALC") {
     field(INPA, "$(P)CURR:SP")
     field(INPB, "$(P)CURR:FULLSCALE")
     field(CALC, "(A/B)*1000000")
-    field(OUT, "$(P)CURR:SP:_RAW PP")
+	field(FLNK, "$(P)CURR:SP:PROC_CNT")  # Will eventually cause state-machine to propagate this to CURR:SP:_RAW
 }
 
 record(longout, "$(P)CURR:SP:_RAW") {
@@ -163,4 +180,42 @@ record(bi, "$(P)MODE") {
     field(ONAM, "Remote")
     info(archive, "VAL")
     info(interest, "HIGH")
+}
+
+record(mbbo, "$(P)STATEMACHINE:STATE") {
+    field(ZRST, "initializing")
+    field(ONST, "idle")
+    field(TWST, "set_current")
+    field(THST, "set_power")
+    field(FRST, "send_reset")
+    field(FVST, "wait_for_inrush")
+}
+
+record(ao, "$(P)STATEMACHINE:INRUSH_WAIT") {
+    field(DESC, "Amount of time to wait for inrush")
+    field(EGU, "s")
+    field(PREC, "1")
+    field(VAL, "30")
+	field(PINI, "YES")
+}
+
+record(calc, "$(P)CURR:SP:PROC_CNT") {
+    # Increments each time CURR:SP is written to. This then causes the state
+	# machine to know that a new value should be sent to hardware at the next
+	# opportunity.
+    field(CALC, "VAL+1")
+}
+
+record(calc, "$(P)RESET:PROC_CNT") {
+    # Increments each time RESET is written to. This then causes the state
+	# machine to know that a new value should be sent to hardware at the next
+	# opportunity.
+    field(CALC, "VAL+1")
+}
+
+record(calc, "$(P)POWER:SP:PROC_CNT") {
+    # Increments each time POWER:SP is written to. This then causes the state
+	# machine to know that a new value should be sent to hardware at the next
+	# opportunity.
+    field(CALC, "VAL+1")
 }
