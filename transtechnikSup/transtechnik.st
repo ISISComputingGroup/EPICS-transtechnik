@@ -62,8 +62,8 @@ ss transtechnik
 	}
 	
     when(reset_sp_proccnt != last_reset_sp_sent) {} state send_reset
-    when(power_sp_proccnt != last_power_sp_sent) {} state set_power
-    when(curr_sp_proccnt != last_curr_sp_sent) {} state set_current
+    when(reset_sp_proccnt == last_reset_sp_sent && power_sp_proccnt != last_power_sp_sent) {} state set_power
+    when(reset_sp_proccnt == last_reset_sp_sent && power_sp_proccnt == last_power_sp_sent && curr_sp_proccnt != last_curr_sp_sent) {} state set_current
   }
   
   state set_current

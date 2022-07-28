@@ -195,7 +195,7 @@ record(ao, "$(P)STATEMACHINE:INRUSH_WAIT") {
     field(DESC, "Amount of time to wait for inrush")
     field(EGU, "s")
     field(PREC, "1")
-    field(VAL, "30")
+    field(VAL, "20")
 	field(PINI, "YES")
 }
 
