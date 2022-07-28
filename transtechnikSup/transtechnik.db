@@ -94,6 +94,7 @@ record(longin, "$(P)VOLT:RAW") {
 }
 
 record(calc, "$(P)VOLT") {
+    field(DESC, "Voltage")
     field(INPA, "$(P)VOLT:RAW CP MSS")
     field(INPB, "$(P)VOLT:FULLSCALE CP MSS")
     field(CALC, "(A/100000)*B")
@@ -114,6 +115,7 @@ record(longin, "$(P)CURR:RAW") {
 }
 
 record(calc, "$(P)CURR") {
+    field(DESC, "Current")
     field(INPA, "$(P)CURR:RAW CP MSS")
     field(INPB, "$(P)CURR:FULLSCALE CP MSS")
     field(CALC, "(A/100000)*B")
@@ -134,6 +136,7 @@ record(longin, "$(P)CURR:SP:RBV:RAW") {
 }
 
 record(calc, "$(P)CURR:SP:RBV") {
+    field(DESC, "Current setpoint readback")
     field(INPA, "$(P)CURR:RAW CP MSS")
     field(INPB, "$(P)CURR:FULLSCALE CP MSS")
     field(CALC, "(A/100000)*B")
@@ -145,6 +148,7 @@ record(calc, "$(P)CURR:SP:RBV") {
 }
 
 record(ao, "$(P)CURR:SP") {
+    field(DESC, "Current setpoint")
     field(EGU, "A")
 	field(PREC, "3")
     field(FLNK, "$(P)CURR:SP:_CALC")
@@ -175,6 +179,7 @@ record(mbbiDirect, "$(P)STATUS") {
 }
 
 record(bi, "$(P)MODE") {
+    field(DESC, "Local/remote mode")
     field(INP, "$(P)STATUS.BF CP MSS")
     field(ZNAM, "Local")
     field(ONAM, "Remote")
@@ -183,6 +188,7 @@ record(bi, "$(P)MODE") {
 }
 
 record(mbbo, "$(P)STATEMACHINE:STATE") {
+    field(DESC, "Statemachine status")
     field(ZRST, "initializing")
     field(ONST, "idle")
     field(TWST, "set_current")
