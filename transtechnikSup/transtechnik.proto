@@ -1,0 +1,41 @@
+OutTerminator = CR;
+InTerminator = CR;
+
+power {
+    out "ADR \$1";
+    out "%{F|N}";
+}
+
+reset {
+    out "ADR \$1";
+    out "RS";
+}
+
+get_curr {
+    out "ADR \$1";
+    out "AD 1";
+    in "%d";
+}
+
+get_volt {
+    out "ADR \$1";
+    out "AD 2";
+    in "%d";
+}
+
+get_curr_sp {
+    out "ADR \$1";
+    out "RA";
+    in "%d";
+}
+
+set_curr {
+    out "ADR \$1";
+    out "WA %d";
+}
+
+get_stat {
+    out "ADR \$1";
+    out "S0";
+    in "%B.!";
+}
