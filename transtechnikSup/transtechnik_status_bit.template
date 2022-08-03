@@ -1,0 +1,8 @@
+record(bi, "$(P)$(NAME)") {
+    field(DESC, "$(NAME)")
+    field(INP, "$(P)STATUS.$(BIT) CP MSS")
+    field(ZNAM, "Ok")
+    field(ONAM, "Tripped")
+    info(archive, "VAL")
+}
+

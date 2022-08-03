@@ -1,0 +1,34 @@
+file transtechnik_status_bit.template {
+
+pattern {PORT, P, NAME, BIT}
+    {"\$(PORT)", "\$(P)", "POWER_REQ", "B1E"}
+    {"\$(PORT)", "\$(P)", "PM1_ERR", "B1D"}
+    {"\$(PORT)", "\$(P)", "PM2_ERR", "B1C"}
+    {"\$(PORT)", "\$(P)", "PM3_ERR", "B1B"}
+    {"\$(PORT)", "\$(P)", "PM4_ERR", "B1A"}
+    {"\$(PORT)", "\$(P)", "PM5_ERR", "B19"}
+    {"\$(PORT)", "\$(P)", "IN_ERR", "B18"}
+    {"\$(PORT)", "\$(P)", "RU_ERR", "B17"}
+    {"\$(PORT)", "\$(P)", "PM1_WARN", "B16"}
+    {"\$(PORT)", "\$(P)", "PM2_WARN", "B15"}
+    {"\$(PORT)", "\$(P)", "PM3_WARN", "B14"}
+    {"\$(PORT)", "\$(P)", "PM4_WARN", "B13"}
+    {"\$(PORT)", "\$(P)", "PM5_WARN", "B12"}
+    {"\$(PORT)", "\$(P)", "IN_WARN", "B11"}
+    {"\$(PORT)", "\$(P)", "RU_WARN", "B10"}
+    {"\$(PORT)", "\$(P)", "ILK:MAGNET_TEMP", "BE"}
+    {"\$(PORT)", "\$(P)", "ILK:MAGNET_WATER", "BD"}
+    {"\$(PORT)", "\$(P)", "ILK:BPS1", "BC"}
+    {"\$(PORT)", "\$(P)", "ILK:BPS2", "BB"}
+    {"\$(PORT)", "\$(P)", "ILK:PPS1", "BA"}
+    {"\$(PORT)", "\$(P)", "ILK:PPS2", "B9"}
+    {"\$(PORT)", "\$(P)", "ILK:SPARE1", "B8"}
+    {"\$(PORT)", "\$(P)", "ILK:SPARE2", "B7"}
+    {"\$(PORT)", "\$(P)", "OUTPUT:OVERVOLTAGE", "B6"}
+    {"\$(PORT)", "\$(P)", "OUTPUT:OVERCURRENT", "B5"}
+    {"\$(PORT)", "\$(P)", "OUTPUT:UNBALANCED", "B4"}
+    {"\$(PORT)", "\$(P)", "ILK:EM_STOP", "B3"}
+    {"\$(PORT)", "\$(P)", "ILK:DOOR", "B2"}
+    {"\$(PORT)", "\$(P)", "ILK:CONTROL_SWITCH", "B1"}
+    {"\$(PORT)", "\$(P)", "ILK:SELF_TEST", "B0"}
+}
