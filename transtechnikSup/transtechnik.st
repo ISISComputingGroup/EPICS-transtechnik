@@ -1,6 +1,6 @@
 program transtechnik("P")
 
-#include "seqPVmacros.h"
+#include "ibexSeqPVmacros.h"
 %% #include "seq_snc.h"
 %% #include "epicsTime.h"
 %% #include "string.h"
