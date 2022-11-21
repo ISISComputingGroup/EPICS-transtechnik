@@ -225,3 +225,20 @@ record(calc, "$(P)POWER:SP:PROC_CNT") {
 	# opportunity.
     field(CALC, "VAL+1")
 }
+
+record(calc, "$(P)ILK") {
+    field(DESC, "ILK SUMMARY")
+    field(CALC, "A||B||C||D||E||F||G||H||I||J||K||L")
+    field(INPA, "$(P)STATUS.BE CP MSS")
+    field(INPB, "$(P)STATUS.BD CP MSS")
+    field(INPC, "$(P)STATUS.BC CP MSS")
+    field(INPD, "$(P)STATUS.BB CP MSS")
+    field(INPE, "$(P)STATUS.BA CP MSS")
+    field(INPF, "$(P)STATUS.B9 CP MSS")
+    field(INPG, "$(P)STATUS.B8 CP MSS")
+    field(INPH, "$(P)STATUS.B7 CP MSS")
+    field(INPI, "$(P)STATUS.B3 CP MSS")
+    field(INPJ, "$(P)STATUS.B2 CP MSS")
+    field(INPK, "$(P)STATUS.B1 CP MSS")
+    field(INPL, "$(P)STATUS.B0 CP MSS")
+}
