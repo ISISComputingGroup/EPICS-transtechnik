@@ -130,8 +130,8 @@ class TranstechnikTests(unittest.TestCase):
         ("_within_limits", CURR_FULLSCALE, TEST_CURRENTS[-2], 0, 0,"No"),
         ("_outside_limits", TEST_CURRENTS[-2], CURR_FULLSCALE, 1, 2,"CURR LIMIT"),
     ])
-    @skip_if_recsim("requires backdoor")
-    def test_WHEN_voltage_is_set_via_backdoor_AND_limits_set_THEN_limit_correct(self, _, limit, curr, limit_status, curr_limit_status, limit_enum):
+    @skip_if_recsim("Requires scaling logic not implemented in recsim")
+    def test_WHEN_current_is_set_AND_limits_set_THEN_limit_correct(self, _, limit, curr, limit_status, curr_limit_status, limit_enum):
         self.ca.set_pv_value("CURR:HLM", limit)
         self.ca.set_pv_value("CURR:LLM", 0)
         self.ca.set_pv_value("CURR:SP", curr)
