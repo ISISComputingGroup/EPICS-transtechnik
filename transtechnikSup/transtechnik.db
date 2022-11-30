@@ -229,16 +229,111 @@ record(calc, "$(P)POWER:SP:PROC_CNT") {
 record(calc, "$(P)ILK") {
     field(DESC, "ILK SUMMARY")
     field(CALC, "A||B||C||D||E||F||G||H||I||J||K||L")
-    field(INPA, "$(P)STATUS.BE CP MSS")
-    field(INPB, "$(P)STATUS.BD CP MSS")
-    field(INPC, "$(P)STATUS.BC CP MSS")
-    field(INPD, "$(P)STATUS.BB CP MSS")
-    field(INPE, "$(P)STATUS.BA CP MSS")
-    field(INPF, "$(P)STATUS.B9 CP MSS")
-    field(INPG, "$(P)STATUS.B8 CP MSS")
-    field(INPH, "$(P)STATUS.B7 CP MSS")
-    field(INPI, "$(P)STATUS.B3 CP MSS")
-    field(INPJ, "$(P)STATUS.B2 CP MSS")
-    field(INPK, "$(P)STATUS.B1 CP MSS")
-    field(INPL, "$(P)STATUS.B0 CP MSS")
+    field(INPA, "$(P)ILK:MAGNET_TEMP CP MSS")
+    field(INPB, "$(P)ILK:MAGNET_WATER CP MSS")
+    field(INPC, "$(P)ILK:BPS1 CP MSS")
+    field(INPD, "$(P)ILK:BPS2 CP MSS")
+    field(INPE, "$(P)ILK:PPS1 CP MSS")
+    field(INPF, "$(P)ILK:PPS2 CP MSS")
+    field(INPG, "$(P)ILK:SPARE1 CP MSS")
+    field(INPH, "$(P)ILK:SPARE2 CP MSS")
+    field(INPI, "$(P)ILK:EM_STOP CP MSS")
+    field(INPJ, "$(P)ILK:DOOR CP MSS")
+    field(INPK, "$(P)ILK:CONTROL_SWITCH CP MSS")
+    field(INPL, "$(P)ILK:SELF_TEST CP MSS")
+}
+
+record(calc, "$(P)ILK:OUTPUT"){
+    field(DESC, "OUTPUT ILK SUMMARY")
+    field(CALC, "A||B||C")
+    field(INPA, "$(P)OUTPUT:OVERVOLTAGE CP MSS")
+    field(INPB, "$(P)OUTPUT:OVERCURRENT CP MSS")
+    field(INPC, "$(P)OUTPUT:UNBALANCED CP MSS")
+}
+
+record(calc, "$(P)ILK:SUMMARY") {
+    field(DESC, "ALL INTERLOCKS SUMMARY")
+    field(CALC, "A||B")
+    field(INPA, "$(P)ILK CP MSS")
+    field(INPB, "$(P)ILK:OUTPUT CP MSS")
+}
+
+record(calc, "$(P)ERROR:SUMMARY") {
+    field(DESC, "ERROR SUMMARY")
+    field(CALC, "a||b||C||D||E||F||G")
+    field(INPA, "$(P)PM1_ERR CP MSS")
+    field(INPB, "$(P)PM2_ERR CP MSS")
+    field(INPC, "$(P)PM3_ERR CP MSS")
+    field(INPD, "$(P)PM4_ERR CP MSS")
+    field(INPE, "$(P)PM5_ERR CP MSS")
+    field(INPF, "$(P)IN_ERR CP MSS")
+    field(INPG, "$(P)RU_ERR CP MSS")
+}
+
+record(calc, "$(P)WARNING:SUMMARY") {
+    field(DESC, "WARNING SUMMARY")
+    field(CALC, "a||b||C||D||E||F||G")
+    field(INPA, "$(P)PM1_WARN CP MSS")
+    field(INPB, "$(P)PM2_WARN CP MSS")
+    field(INPC, "$(P)PM3_WARN CP MSS")
+    field(INPD, "$(P)PM4_WARN CP MSS")
+    field(INPE, "$(P)PM5_WARN CP MSS")
+    field(INPF, "$(P)IN_WARN CP MSS")
+    field(INPG, "$(P)RU_WARN CP MSS")
+}
+
+record(ao, "$(P)CURR:HLM"){
+    field(DTYP, "Soft Channel")
+    field(EGU, "A")
+}
+
+record(ao, "$(P)CURR:LLM"){
+    field(DTYP, "Soft Channel")
+    field(EGU, "A")
+}
+
+record(calc, "$(P)CURR:LIMIT") {
+    field(DESC, "Current Within Limit")
+    field(CALC, "(C<A)||(B<C)")
+    field(INPA, "$(P)CURR:LLM CP")
+    field(INPB, "$(P)CURR:HLM CP")
+    field(INPC, "$(P)CURR CP")
+}
+
+record(ao, "$(P)VOLT:HLM"){
+    field(DTYP, "Soft Channel")
+    field(EGU, "V")
+}
+
+record(ao, "$(P)VOLT:LLM"){
+    field(DTYP, "Soft Channel")
+    field(EGU, "V")
+}
+
+record(calc, "$(P)VOLT:LIMIT") {
+    field(DESC, "Voltage Within Limit")
+    field(CALC, "(C<A)||(B<C)")
+    field(INPA, "$(P)VOLT:LLM CP")
+    field(INPB, "$(P)VOLT:HLM CP")
+    field(INPC, "$(P)VOLT CP")
+}
+
+record(calc, "$(P)LIMIT") {
+    field(DESC, "LIMIT HIT")
+    field(CALC, "A?(B?3:1):(B?2:0)")
+    field(INPA, "$(P)VOLT:LIMIT CP")
+    field(INPB, "$(P)CURR:LIMIT CP")
+}
+
+record(mbbi, "$(P)LIMIT:ENUM") {
+    field(INP, "$(P)LIMIT CP")
+    field(DESC, "Display Limit")
+    field(ZRST, "No")        
+    field(ZRVL, "0")
+    field(ONST, "VOLT LIMIT")         
+    field(ONVL, "1")
+    field(TWST, "CURR LIMIT")         
+    field(TWVL, "2")
+    field(THST, "BOTH LIMITS")       
+    field(THVL, "3")
 }
