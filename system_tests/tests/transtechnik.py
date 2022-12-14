@@ -24,6 +24,7 @@ IOCS = [
             "VOLT_FULLSCALE": VOLT_FULLSCALE,
             "CURR_FULLSCALE": CURR_FULLSCALE,
             "PS_ADDR": "000",
+            "LIMIT_ALARM": "MAJOR",
         }
     },
 ]
@@ -89,10 +90,10 @@ class TranstechnikTests(unittest.TestCase):
         self.ca.set_pv_value("STATEMACHINE:INRUSH_WAIT", INRUSH_WAIT_TIME)
 
         # Set Limits so that all values are within limits
-        self.ca.set_pv_value("VOLT:HLM", VOLT_FULLSCALE+1)
-        self.ca.set_pv_value("VOLT:LLM", -1)
-        self.ca.set_pv_value("CURR:HLM", CURR_FULLSCALE+1)
-        self.ca.set_pv_value("CURR:LLM", -1)
+        self.ca.set_pv_value("VOLT.HIGH", VOLT_FULLSCALE+1)
+        self.ca.set_pv_value("VOLT.LOW", -1)
+        self.ca.set_pv_value("CURR.HIGH", CURR_FULLSCALE+1)
+        self.ca.set_pv_value("CURR.LOW", -1)
 
     @parameterized.expand(parameterized_list(TEST_VOLTAGES))
     @skip_if_recsim("requires backdoor")
@@ -106,11 +107,10 @@ class TranstechnikTests(unittest.TestCase):
     ])
     @skip_if_recsim("requires backdoor")
     def test_WHEN_voltage_is_set_via_backdoor_AND_limits_set_THEN_limit_correct(self, _, limit, voltage, limit_status, limit_enum):
-        self.ca.set_pv_value("VOLT:HLM", limit)
-        self.ca.set_pv_value("VOLT:LLM", 0)
+        self.ca.set_pv_value("VOLT.HIGH", limit)
+        self.ca.set_pv_value("VOLT.LOW", 0)
         self._lewis.backdoor_run_function_on_device("set_voltage", [0, voltage])
         self.ca.assert_that_pv_is_number("VOLT", voltage, tolerance=0.01)
-        self.ca.assert_that_pv_is("VOLT:LIMIT", limit_status)
         self.ca.assert_that_pv_is("LIMIT", limit_status)
         self.ca.assert_that_pv_is("LIMIT:ENUM", limit_enum)
 
@@ -127,17 +127,16 @@ class TranstechnikTests(unittest.TestCase):
         self.ca.assert_that_pv_is_number("CURR:SP:RBV", val, tolerance=0.01)
 
     @parameterized.expand([
-        ("_within_limits", CURR_FULLSCALE, TEST_CURRENTS[-2], 0, 0,"No"),
-        ("_outside_limits", TEST_CURRENTS[-2], CURR_FULLSCALE, 1, 2,"CURR LIMIT"),
+        ("_within_limits", CURR_FULLSCALE, TEST_CURRENTS[-2], 0,"No"),
+        ("_outside_limits", TEST_CURRENTS[-2], CURR_FULLSCALE, 2,"CURR LIMIT"),
     ])
     @skip_if_recsim("Requires scaling logic not implemented in recsim")
-    def test_WHEN_current_is_set_AND_limits_set_THEN_limit_correct(self, _, limit, curr, limit_status, curr_limit_status, limit_enum):
-        self.ca.set_pv_value("CURR:HLM", limit)
-        self.ca.set_pv_value("CURR:LLM", 0)
+    def test_WHEN_current_is_set_AND_limits_set_THEN_limit_correct(self, _, limit, curr, limit_status, limit_enum):
+        self.ca.set_pv_value("CURR.HIGH", limit)
+        self.ca.set_pv_value("CURR.LOW", 0)
         self.ca.set_pv_value("CURR:SP", curr)
         self.ca.assert_that_pv_is_number("CURR", curr, tolerance=0.01)
-        self.ca.assert_that_pv_is("CURR:LIMIT", limit_status)
-        self.ca.assert_that_pv_is("LIMIT", curr_limit_status)
+        self.ca.assert_that_pv_is("LIMIT", limit_status)
         self.ca.assert_that_pv_is("LIMIT:ENUM", limit_enum)
 
     @contextlib.contextmanager

@@ -93,14 +93,25 @@ record(longin, "$(P)VOLT:RAW") {
     info(archive, "VAL")
 }
 
-record(calc, "$(P)VOLT") {
-    field(DESC, "Voltage")
+record(calc, "$(P)VOLT:CALC") {
+    field(DESC, "Voltage Calc")
     field(INPA, "$(P)VOLT:RAW CP MSS")
     field(INPB, "$(P)VOLT:FULLSCALE CP MSS")
     field(CALC, "(A/100000)*B")
     field(ASG, "READONLY")
     field(EGU, "V")
 	field(PREC, "3")
+}
+
+record(ai, "$(P)VOLT") {
+    field(DESC, "Voltage")
+    field(INP, "$(P)VOLT:CALC CP MSS")
+    field(EGU, "V")
+	field(PREC, "3")
+    field(HIGH, 0)
+    field(LOW, 0)
+    field(HSV, "$(LIMIT_ALARM)")
+    field(LSV, "$(LIMIT_ALARM)")
     info(interest, "HIGH")
     info(archive, "VAL")
 }
@@ -114,14 +125,25 @@ record(longin, "$(P)CURR:RAW") {
     info(archive, "VAL")
 }
 
-record(calc, "$(P)CURR") {
-    field(DESC, "Current")
+record(calc, "$(P)CURR:CALC") {
+    field(DESC, "Current Calc")
     field(INPA, "$(P)CURR:RAW CP MSS")
     field(INPB, "$(P)CURR:FULLSCALE CP MSS")
     field(CALC, "(A/100000)*B")
     field(ASG, "READONLY")
     field(EGU, "A")
 	field(PREC, "3")
+}
+
+record(ai, "$(P)CURR") {
+    field(DESC, "Current")
+    field(INP, "$(P)CURR:CALC CP MSS")
+    field(EGU, "A")
+	field(PREC, "3")
+    field(HIGH, 0)
+    field(LOW, 0)
+    field(HSV, "$(LIMIT_ALARM)")
+    field(LSV, "$(LIMIT_ALARM)")
     info(interest, "HIGH")
     info(archive, "VAL")
 }
@@ -256,6 +278,7 @@ record(calc, "$(P)ILK:SUMMARY") {
     field(CALC, "A||B")
     field(INPA, "$(P)ILK CP MSS")
     field(INPB, "$(P)ILK:OUTPUT CP MSS")
+    info(interest, "MEDIUM")
 }
 
 record(calc, "$(P)ERROR:SUMMARY") {
@@ -268,6 +291,7 @@ record(calc, "$(P)ERROR:SUMMARY") {
     field(INPE, "$(P)PM5_ERR CP MSS")
     field(INPF, "$(P)IN_ERR CP MSS")
     field(INPG, "$(P)RU_ERR CP MSS")
+    info(interest, "HIGH")
 }
 
 record(calc, "$(P)WARNING:SUMMARY") {
@@ -280,53 +304,18 @@ record(calc, "$(P)WARNING:SUMMARY") {
     field(INPE, "$(P)PM5_WARN CP MSS")
     field(INPF, "$(P)IN_WARN CP MSS")
     field(INPG, "$(P)RU_WARN CP MSS")
-}
-
-record(ao, "$(P)CURR:HLM"){
-    field(DTYP, "Soft Channel")
-    field(EGU, "A")
-}
-
-record(ao, "$(P)CURR:LLM"){
-    field(DTYP, "Soft Channel")
-    field(EGU, "A")
-}
-
-record(calc, "$(P)CURR:LIMIT") {
-    field(DESC, "Current Within Limit")
-    field(CALC, "(C<A)||(B<C)")
-    field(INPA, "$(P)CURR:LLM CP")
-    field(INPB, "$(P)CURR:HLM CP")
-    field(INPC, "$(P)CURR CP")
-}
-
-record(ao, "$(P)VOLT:HLM"){
-    field(DTYP, "Soft Channel")
-    field(EGU, "V")
-}
-
-record(ao, "$(P)VOLT:LLM"){
-    field(DTYP, "Soft Channel")
-    field(EGU, "V")
-}
-
-record(calc, "$(P)VOLT:LIMIT") {
-    field(DESC, "Voltage Within Limit")
-    field(CALC, "(C<A)||(B<C)")
-    field(INPA, "$(P)VOLT:LLM CP")
-    field(INPB, "$(P)VOLT:HLM CP")
-    field(INPC, "$(P)VOLT CP")
+    info(interest, "HIGH")
 }
 
 record(calc, "$(P)LIMIT") {
     field(DESC, "LIMIT HIT")
     field(CALC, "A?(B?3:1):(B?2:0)")
-    field(INPA, "$(P)VOLT:LIMIT CP")
-    field(INPB, "$(P)CURR:LIMIT CP")
+    field(INPA, "$(P)VOLT.SEVR CP MSS")
+    field(INPB, "$(P)CURR.SEVR CP MSS")
 }
 
 record(mbbi, "$(P)LIMIT:ENUM") {
-    field(INP, "$(P)LIMIT CP")
+    field(INP, "$(P)LIMIT CP MSI")
     field(DESC, "Display Limit")
     field(ZRST, "No")        
     field(ZRVL, "0")
