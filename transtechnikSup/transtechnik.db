@@ -93,14 +93,25 @@ record(longin, "$(P)VOLT:RAW") {
     info(archive, "VAL")
 }
 
-record(calc, "$(P)VOLT") {
-    field(DESC, "Voltage")
+record(calc, "$(P)VOLT:CALC") {
+    field(DESC, "Voltage Calc")
     field(INPA, "$(P)VOLT:RAW CP MSS")
     field(INPB, "$(P)VOLT:FULLSCALE CP MSS")
     field(CALC, "(A/100000)*B")
     field(ASG, "READONLY")
     field(EGU, "V")
 	field(PREC, "3")
+}
+
+record(ai, "$(P)VOLT") {
+    field(DESC, "Voltage")
+    field(INP, "$(P)VOLT:CALC CP MSS")
+    field(EGU, "V")
+	field(PREC, "3")
+    field(HIGH, 0)
+    field(LOW, 0)
+    field(HSV, "$(LIMIT_ALARM)")
+    field(LSV, "$(LIMIT_ALARM)")
     info(interest, "HIGH")
     info(archive, "VAL")
 }
@@ -114,14 +125,25 @@ record(longin, "$(P)CURR:RAW") {
     info(archive, "VAL")
 }
 
-record(calc, "$(P)CURR") {
-    field(DESC, "Current")
+record(calc, "$(P)CURR:CALC") {
+    field(DESC, "Current Calc")
     field(INPA, "$(P)CURR:RAW CP MSS")
     field(INPB, "$(P)CURR:FULLSCALE CP MSS")
     field(CALC, "(A/100000)*B")
     field(ASG, "READONLY")
     field(EGU, "A")
 	field(PREC, "3")
+}
+
+record(ai, "$(P)CURR") {
+    field(DESC, "Current")
+    field(INP, "$(P)CURR:CALC CP MSS")
+    field(EGU, "A")
+	field(PREC, "3")
+    field(HIGH, 0)
+    field(LOW, 0)
+    field(HSV, "$(LIMIT_ALARM)")
+    field(LSV, "$(LIMIT_ALARM)")
     info(interest, "HIGH")
     info(archive, "VAL")
 }
@@ -224,4 +246,83 @@ record(calc, "$(P)POWER:SP:PROC_CNT") {
 	# machine to know that a new value should be sent to hardware at the next
 	# opportunity.
     field(CALC, "VAL+1")
+}
+
+record(calc, "$(P)ILK") {
+    field(DESC, "ILK SUMMARY")
+    field(CALC, "A||B||C||D||E||F||G||H||I||J||K||L")
+    field(INPA, "$(P)ILK:MAGNET_TEMP CP MSS")
+    field(INPB, "$(P)ILK:MAGNET_WATER CP MSS")
+    field(INPC, "$(P)ILK:BPS1 CP MSS")
+    field(INPD, "$(P)ILK:BPS2 CP MSS")
+    field(INPE, "$(P)ILK:PPS1 CP MSS")
+    field(INPF, "$(P)ILK:PPS2 CP MSS")
+    field(INPG, "$(P)ILK:SPARE1 CP MSS")
+    field(INPH, "$(P)ILK:SPARE2 CP MSS")
+    field(INPI, "$(P)ILK:EM_STOP CP MSS")
+    field(INPJ, "$(P)ILK:DOOR CP MSS")
+    field(INPK, "$(P)ILK:CONTROL_SWITCH CP MSS")
+    field(INPL, "$(P)ILK:SELF_TEST CP MSS")
+}
+
+record(calc, "$(P)ILK:OUTPUT"){
+    field(DESC, "OUTPUT ILK SUMMARY")
+    field(CALC, "A||B||C")
+    field(INPA, "$(P)OUTPUT:OVERVOLTAGE CP MSS")
+    field(INPB, "$(P)OUTPUT:OVERCURRENT CP MSS")
+    field(INPC, "$(P)OUTPUT:UNBALANCED CP MSS")
+}
+
+record(calc, "$(P)ILK:SUMMARY") {
+    field(DESC, "ALL INTERLOCKS SUMMARY")
+    field(CALC, "A||B")
+    field(INPA, "$(P)ILK CP MSS")
+    field(INPB, "$(P)ILK:OUTPUT CP MSS")
+    info(interest, "MEDIUM")
+}
+
+record(calc, "$(P)ERROR:SUMMARY") {
+    field(DESC, "ERROR SUMMARY")
+    field(CALC, "a||b||C||D||E||F||G")
+    field(INPA, "$(P)PM1_ERR CP MSS")
+    field(INPB, "$(P)PM2_ERR CP MSS")
+    field(INPC, "$(P)PM3_ERR CP MSS")
+    field(INPD, "$(P)PM4_ERR CP MSS")
+    field(INPE, "$(P)PM5_ERR CP MSS")
+    field(INPF, "$(P)IN_ERR CP MSS")
+    field(INPG, "$(P)RU_ERR CP MSS")
+    info(interest, "HIGH")
+}
+
+record(calc, "$(P)WARNING:SUMMARY") {
+    field(DESC, "WARNING SUMMARY")
+    field(CALC, "a||b||C||D||E||F||G")
+    field(INPA, "$(P)PM1_WARN CP MSS")
+    field(INPB, "$(P)PM2_WARN CP MSS")
+    field(INPC, "$(P)PM3_WARN CP MSS")
+    field(INPD, "$(P)PM4_WARN CP MSS")
+    field(INPE, "$(P)PM5_WARN CP MSS")
+    field(INPF, "$(P)IN_WARN CP MSS")
+    field(INPG, "$(P)RU_WARN CP MSS")
+    info(interest, "HIGH")
+}
+
+record(calc, "$(P)LIMIT") {
+    field(DESC, "LIMIT HIT")
+    field(CALC, "A?(B?3:1):(B?2:0)")
+    field(INPA, "$(P)VOLT.SEVR CP MSS")
+    field(INPB, "$(P)CURR.SEVR CP MSS")
+}
+
+record(mbbi, "$(P)LIMIT:ENUM") {
+    field(INP, "$(P)LIMIT CP MSI")
+    field(DESC, "Display Limit")
+    field(ZRST, "No")        
+    field(ZRVL, "0")
+    field(ONST, "VOLT LIMIT")         
+    field(ONVL, "1")
+    field(TWST, "CURR LIMIT")         
+    field(TWVL, "2")
+    field(THST, "BOTH LIMITS")       
+    field(THVL, "3")
 }
