@@ -314,15 +314,38 @@ record(calc, "$(P)LIMIT") {
     field(INPB, "$(P)CURR.SEVR CP MSS")
 }
 
-record(mbbi, "$(P)LIMIT:ENUM") {
-    field(INP, "$(P)LIMIT CP MSI")
+record(calc, "$(P)ALARM:SUMMARY"){
+    field(CALC, "C?(A?7:5):(B?(A?6:4):A)")
+    field(INPA, "$(P)LIMIT CP MSS")
+    field(INPB, "$(P)WARNING:SUMMARY CP MSS")
+    field(INPC, "$(P)ERROR:SUMMARY CP MSS")
+}
+
+record(mbbi, "$(P)ALARM:ENUM") {
+    field(INP, "$(P)ALARM:SUMMARY CP MSI")
     field(DESC, "Display Limit")
     field(ZRST, "No")        
     field(ZRVL, "0")
+    field(ZRSV, "NO ALARM")  
     field(ONST, "VOLT LIMIT")         
     field(ONVL, "1")
+    field(ONSV, "$(LIMIT_ALARM)")
     field(TWST, "CURR LIMIT")         
     field(TWVL, "2")
+    field(TWSV, "$(LIMIT_ALARM)")
     field(THST, "BOTH LIMITS")       
     field(THVL, "3")
+    field(THSV, "$(LIMIT_ALARM)")
+    field(FRST, "WARNING")       
+    field(FRVL, "4")
+    field(FRSV, "MINOR")
+    field(FVST, "ERROR")       
+    field(FVVL, "5")
+    field(FVSV, "MAJOR")
+    field(SXST, "LIMIT AND WARNING")       
+    field(SXVL, "6")
+    field(SXSV, "MINOR")
+    field(SVST, "LIMIT AND ERROR")       
+    field(SVVL, "7")
+    field(SVSV, "MAJOR")
 }
