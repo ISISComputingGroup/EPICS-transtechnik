@@ -106,13 +106,13 @@ class TranstechnikTests(unittest.TestCase):
         ("_outside_limits", TEST_VOLTAGES[-2], VOLT_FULLSCALE, 1, "VOLT LIMIT"),
     ])
     @skip_if_recsim("requires backdoor")
-    def test_WHEN_voltage_is_set_via_backdoor_AND_limits_set_THEN_limit_correct(self, _, limit, voltage, limit_status, limit_enum):
+    def test_WHEN_voltage_is_set_via_backdoor_AND_limits_set_THEN_limit_correct(self, _, limit, voltage, limit_status, alarm_enum):
         self.ca.set_pv_value("VOLT.HIGH", limit)
         self.ca.set_pv_value("VOLT.LOW", 0)
         self._lewis.backdoor_run_function_on_device("set_voltage", [0, voltage])
         self.ca.assert_that_pv_is_number("VOLT", voltage, tolerance=0.01)
         self.ca.assert_that_pv_is("LIMIT", limit_status)
-        self.ca.assert_that_pv_is("LIMIT:ENUM", limit_enum)
+        self.ca.assert_that_pv_is("ALARM:ENUM", alarm_enum)
 
     @parameterized.expand(parameterized_list(TEST_CURRENTS))
     @skip_if_recsim("Requires scaling logic not implemented in recsim")
@@ -131,13 +131,13 @@ class TranstechnikTests(unittest.TestCase):
         ("_outside_limits", TEST_CURRENTS[-2], CURR_FULLSCALE, 2,"CURR LIMIT"),
     ])
     @skip_if_recsim("Requires scaling logic not implemented in recsim")
-    def test_WHEN_current_is_set_AND_limits_set_THEN_limit_correct(self, _, limit, curr, limit_status, limit_enum):
+    def test_WHEN_current_is_set_AND_limits_set_THEN_limit_correct(self, _, limit, curr, limit_status, alarm_enum):
         self.ca.set_pv_value("CURR.HIGH", limit)
         self.ca.set_pv_value("CURR.LOW", 0)
         self.ca.set_pv_value("CURR:SP", curr)
         self.ca.assert_that_pv_is_number("CURR", curr, tolerance=0.01)
         self.ca.assert_that_pv_is("LIMIT", limit_status)
-        self.ca.assert_that_pv_is("LIMIT:ENUM", limit_enum)
+        self.ca.assert_that_pv_is("ALARM:ENUM", alarm_enum)
 
     @contextlib.contextmanager
     def _disconnect_device(self):

@@ -326,7 +326,7 @@ record(mbbi, "$(P)ALARM:ENUM") {
     field(DESC, "Display Limit")
     field(ZRST, "No")        
     field(ZRVL, "0")
-    field(ZRSV, "NO ALARM")  
+    field(ZRSV, "NO_ALARM")
     field(ONST, "VOLT LIMIT")         
     field(ONVL, "1")
     field(ONSV, "$(LIMIT_ALARM)")
