@@ -1,7 +1,8 @@
 from lewis.adapters.stream import StreamInterface
-from lewis.utils.command_builder import CmdBuilder
 from lewis.core.logging import has_log
+from lewis.utils.command_builder import CmdBuilder
 from lewis.utils.replies import conditional_reply
+
 from ..device import INTERLOCKS
 
 
@@ -43,26 +44,34 @@ class TranstechnikStreamInterface(StreamInterface):
 
     @conditional_reply("connected")
     def read_curr(self):
-        return int((self.device.supply().current / self.device.supply().fullscale_current) * 100_000.)
+        return int(
+            (self.device.supply().current / self.device.supply().fullscale_current) * 100_000.0
+        )
 
     @conditional_reply("connected")
     def read_volt(self):
-        return int((self.device.supply().voltage / self.device.supply().fullscale_voltage) * 100_000.)
+        return int(
+            (self.device.supply().voltage / self.device.supply().fullscale_voltage) * 100_000.0
+        )
 
     @conditional_reply("connected")
     def read_curr_sp(self):
-        return int((self.device.supply().current / self.device.supply().fullscale_current) * 100_000.)
+        return int(
+            (self.device.supply().current / self.device.supply().fullscale_current) * 100_000.0
+        )
 
     @conditional_reply("connected")
     def set_curr(self, val):
-        self.device.supply().current = (val / 1_000_000.) * self.device.supply().fullscale_current
+        self.device.supply().current = (val / 1_000_000.0) * self.device.supply().fullscale_current
 
     @conditional_reply("connected")
     def get_status(self):
         def bit_to_str(b):
             return "!" if b else "."
 
-        vals = [not self.device.supply().power] + [self.device.supply().interlocks[k] for k in INTERLOCKS]
+        vals = [not self.device.supply().power] + [
+            self.device.supply().interlocks[k] for k in INTERLOCKS
+        ]
         reply = "".join(bit_to_str(b) for b in vals)
         print(f"status reply: {reply}")
         return reply

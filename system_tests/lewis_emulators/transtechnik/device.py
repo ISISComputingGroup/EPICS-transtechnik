@@ -1,8 +1,9 @@
-from lewis.devices import StateMachineDevice
-from lewis.core.logging import has_log
-from .states import DefaultState
 from collections import OrderedDict
 
+from lewis.core.logging import has_log
+from lewis.devices import StateMachineDevice
+
+from .states import DefaultState
 
 INTERLOCKS = [
     "power_on_cmd",
@@ -59,15 +60,14 @@ class Supply:
 
 @has_log
 class SimulatedTranstechnik(StateMachineDevice):
-
     def _initialize_data(self):
         self.re_initialise()
 
     def _get_state_handlers(self):
-        return {'default': DefaultState()}
+        return {"default": DefaultState()}
 
     def _get_initial_state(self):
-        return 'default'
+        return "default"
 
     def _get_transition_handlers(self):
         return OrderedDict([])
@@ -86,8 +86,10 @@ class SimulatedTranstechnik(StateMachineDevice):
         Gets the currently-addressed power supply.
         """
         if self.address not in self.supplies:
-            raise ValueError(f"Invalid power supply addressed "
-                             f"(address {self.address}, available {self.supplies.keys()}")
+            raise ValueError(
+                f"Invalid power supply addressed "
+                f"(address {self.address}, available {self.supplies.keys()}"
+            )
         return self.supplies[self.address]
 
     def set_voltage(self, addr, voltage):

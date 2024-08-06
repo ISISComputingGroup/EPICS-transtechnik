@@ -1,11 +1,15 @@
 import contextlib
 import unittest
 
-from utils.test_modes import TestModes
+from parameterized import parameterized
 from utils.channel_access import ChannelAccess
 from utils.ioc_launcher import get_default_ioc_dir
-from utils.testing import get_running_lewis_and_ioc, assert_log_messages, skip_if_recsim, parameterized_list
-from parameterized import parameterized
+from utils.test_modes import TestModes
+from utils.testing import (
+    get_running_lewis_and_ioc,
+    parameterized_list,
+    skip_if_recsim,
+)
 
 # Device prefix
 DEVICE_PREFIX = "TRANTECH_01"
@@ -25,7 +29,7 @@ IOCS = [
             "CURR_FULLSCALE": CURR_FULLSCALE,
             "PS_ADDR": "000",
             "LIMIT_ALARM": "MAJOR",
-        }
+        },
     },
 ]
 
@@ -55,7 +59,7 @@ ERRORS = [
     ("pm4_error", "PM4_ERR"),
     ("pm5_error", "PM5_ERR"),
     ("in_error", "IN_ERR"),
-    ("ru_error", "RU_ERR")
+    ("ru_error", "RU_ERR"),
 ]
 WARNINGS = [
     ("pm1_warning", "PM1_WARN"),
@@ -64,35 +68,36 @@ WARNINGS = [
     ("pm4_warning", "PM4_WARN"),
     ("pm5_warning", "PM5_WARN"),
     ("in_warning", "IN_WARN"),
-    ("ru_warning", "RU_WARN")
+    ("ru_warning", "RU_WARN"),
 ]
 INTERLOCKS = [("power_on_cmd", "POWER_REQ")] + ERRORS + WARNINGS + ILK + OUTPUT_ILK
 
 TEST_MODES = [TestModes.DEVSIM]
 
-TEST_VOLTAGES = [0, 0.1, VOLT_FULLSCALE/2, VOLT_FULLSCALE]
-TEST_CURRENTS = [0, 0.1, CURR_FULLSCALE/2, CURR_FULLSCALE]
+TEST_VOLTAGES = [0, 0.1, VOLT_FULLSCALE / 2, VOLT_FULLSCALE]
+TEST_CURRENTS = [0, 0.1, CURR_FULLSCALE / 2, CURR_FULLSCALE]
 
 INRUSH_WAIT_TIME = 10
 
 
 class TranstechnikTests(unittest.TestCase):
-
     def setUp(self):
         self._lewis, self._ioc = get_running_lewis_and_ioc(EMULATOR_DEVICE, DEVICE_PREFIX)
-        self.ca = ChannelAccess(device_prefix=DEVICE_PREFIX, default_wait_time=0., default_timeout=5)
+        self.ca = ChannelAccess(
+            device_prefix=DEVICE_PREFIX, default_wait_time=0.0, default_timeout=5
+        )
         self.ca.assert_that_pv_is_number("VOLT:FULLSCALE", VOLT_FULLSCALE, tolerance=0.01)
         self.ca.assert_that_pv_is_number("CURR:FULLSCALE", CURR_FULLSCALE, tolerance=0.01)
         self.ca.assert_that_pv_exists("DISABLE", timeout=30)
 
         # Ensure statemachine is not busy before running each test
-        self.ca.assert_that_pv_is("STATEMACHINE:STATE", "idle", timeout=3*INRUSH_WAIT_TIME)
+        self.ca.assert_that_pv_is("STATEMACHINE:STATE", "idle", timeout=3 * INRUSH_WAIT_TIME)
         self.ca.set_pv_value("STATEMACHINE:INRUSH_WAIT", INRUSH_WAIT_TIME)
 
         # Set Limits so that all values are within limits
-        self.ca.set_pv_value("VOLT.HIGH", VOLT_FULLSCALE+1)
+        self.ca.set_pv_value("VOLT.HIGH", VOLT_FULLSCALE + 1)
         self.ca.set_pv_value("VOLT.LOW", -1)
-        self.ca.set_pv_value("CURR.HIGH", CURR_FULLSCALE+1)
+        self.ca.set_pv_value("CURR.HIGH", CURR_FULLSCALE + 1)
         self.ca.set_pv_value("CURR.LOW", -1)
 
     @parameterized.expand(parameterized_list(TEST_VOLTAGES))
@@ -101,12 +106,16 @@ class TranstechnikTests(unittest.TestCase):
         self._lewis.backdoor_run_function_on_device("set_voltage", [0, val])
         self.ca.assert_that_pv_is_number("VOLT", val, tolerance=0.01)
 
-    @parameterized.expand([
-        ("_within_limits", VOLT_FULLSCALE, TEST_VOLTAGES[-2], 0, "No"),
-        ("_outside_limits", TEST_VOLTAGES[-2], VOLT_FULLSCALE, 1, "VOLT LIMIT"),
-    ])
+    @parameterized.expand(
+        [
+            ("_within_limits", VOLT_FULLSCALE, TEST_VOLTAGES[-2], 0, "No"),
+            ("_outside_limits", TEST_VOLTAGES[-2], VOLT_FULLSCALE, 1, "VOLT LIMIT"),
+        ]
+    )
     @skip_if_recsim("requires backdoor")
-    def test_WHEN_voltage_is_set_via_backdoor_AND_limits_set_THEN_limit_correct(self, _, limit, voltage, limit_status, alarm_enum):
+    def test_WHEN_voltage_is_set_via_backdoor_AND_limits_set_THEN_limit_correct(
+        self, _, limit, voltage, limit_status, alarm_enum
+    ):
         self.ca.set_pv_value("VOLT.HIGH", limit)
         self.ca.set_pv_value("VOLT.LOW", 0)
         self._lewis.backdoor_run_function_on_device("set_voltage", [0, voltage])
@@ -126,12 +135,16 @@ class TranstechnikTests(unittest.TestCase):
         self.ca.set_pv_value("CURR:SP", val)
         self.ca.assert_that_pv_is_number("CURR:SP:RBV", val, tolerance=0.01)
 
-    @parameterized.expand([
-        ("_within_limits", CURR_FULLSCALE, TEST_CURRENTS[-2], 0,"No"),
-        ("_outside_limits", TEST_CURRENTS[-2], CURR_FULLSCALE, 2,"CURR LIMIT"),
-    ])
+    @parameterized.expand(
+        [
+            ("_within_limits", CURR_FULLSCALE, TEST_CURRENTS[-2], 0, "No"),
+            ("_outside_limits", TEST_CURRENTS[-2], CURR_FULLSCALE, 2, "CURR LIMIT"),
+        ]
+    )
     @skip_if_recsim("Requires scaling logic not implemented in recsim")
-    def test_WHEN_current_is_set_AND_limits_set_THEN_limit_correct(self, _, limit, curr, limit_status, alarm_enum):
+    def test_WHEN_current_is_set_AND_limits_set_THEN_limit_correct(
+        self, _, limit, curr, limit_status, alarm_enum
+    ):
         self.ca.set_pv_value("CURR.HIGH", limit)
         self.ca.set_pv_value("CURR.LOW", 0)
         self.ca.set_pv_value("CURR:SP", curr)
@@ -147,9 +160,11 @@ class TranstechnikTests(unittest.TestCase):
         finally:
             self._lewis.backdoor_set_on_device("connected", True)
 
-    @parameterized.expand(parameterized_list(
-        ["VOLT", "CURR", "VOLT:RAW", "CURR:RAW", "STATUS"] + [pv for _, pv in INTERLOCKS]
-    ))
+    @parameterized.expand(
+        parameterized_list(
+            ["VOLT", "CURR", "VOLT:RAW", "CURR:RAW", "STATUS"] + [pv for _, pv in INTERLOCKS]
+        )
+    )
     @skip_if_recsim("testing disconnection requires emulator")
     def test_WHEN_device_disconnected_THEN_pvs_in_alarm(self, _, pv):
         self.ca.assert_that_pv_alarm_is(pv, self.ca.Alarms.NONE)
@@ -176,10 +191,16 @@ class TranstechnikTests(unittest.TestCase):
         self._lewis.backdoor_run_function_on_device("set_interlock", [0, "is_remote", False])
         self.ca.assert_that_pv_is("MODE", "Local")
 
-    @parameterized.expand(parameterized_list([(emulator_name, pv_name, "ILK") for emulator_name, pv_name in ILK] +
-                                    [(emulator_name, pv_name, "ILK:OUTPUT") for emulator_name, pv_name in OUTPUT_ILK]))
+    @parameterized.expand(
+        parameterized_list(
+            [(emulator_name, pv_name, "ILK") for emulator_name, pv_name in ILK]
+            + [(emulator_name, pv_name, "ILK:OUTPUT") for emulator_name, pv_name in OUTPUT_ILK]
+        )
+    )
     @skip_if_recsim("status bits do not change in recsim")
-    def test_WHEN_interlock_is_set_THEN_ilk_summary_correct(self, _, emulator_name, pv_name, summary):
+    def test_WHEN_interlock_is_set_THEN_ilk_summary_correct(
+        self, _, emulator_name, pv_name, summary
+    ):
         self._lewis.backdoor_run_function_on_device("set_interlock", [0, emulator_name, True])
         self.ca.assert_that_pv_is(pv_name, "Tripped")
         self.ca.assert_that_pv_is(summary, 1)
@@ -189,11 +210,16 @@ class TranstechnikTests(unittest.TestCase):
         self.ca.assert_that_pv_is(summary, 0)
         self.ca.assert_that_pv_is("ILK:SUMMARY", 0)
 
-    @parameterized.expand(parameterized_list([(emulator_name, pv_name, "ERROR") for emulator_name, pv_name in ERRORS] +
-                                             [(emulator_name, pv_name, "WARNING") for emulator_name, pv_name in
-                                              WARNINGS]))
+    @parameterized.expand(
+        parameterized_list(
+            [(emulator_name, pv_name, "ERROR") for emulator_name, pv_name in ERRORS]
+            + [(emulator_name, pv_name, "WARNING") for emulator_name, pv_name in WARNINGS]
+        )
+    )
     @skip_if_recsim("status bits do not change in recsim")
-    def test_WHEN_warning_or_error_is_set_THEN_ilk_summary_correct(self, _, emulator_name, pv_name, summary):
+    def test_WHEN_warning_or_error_is_set_THEN_ilk_summary_correct(
+        self, _, emulator_name, pv_name, summary
+    ):
         self._lewis.backdoor_run_function_on_device("set_interlock", [0, emulator_name, True])
         self.ca.assert_that_pv_is(pv_name, "Tripped")
         self.ca.assert_that_pv_is(f"{summary}:SUMMARY", 1)
@@ -219,7 +245,7 @@ class TranstechnikTests(unittest.TestCase):
 
         # Since we recently did a set, turning power off should not go through straight away
         self.ca.assert_that_pv_is("POWER", "On")
-        self.ca.assert_that_pv_value_is_unchanged("POWER", wait=INRUSH_WAIT_TIME/2.)
+        self.ca.assert_that_pv_value_is_unchanged("POWER", wait=INRUSH_WAIT_TIME / 2.0)
 
         # Once we have waited for inrush current from first setpoint to go through, then our power off command
         # should be acted on.
@@ -250,18 +276,20 @@ class TranstechnikTests(unittest.TestCase):
         self.ca.set_pv_value("POWER:SP", "On")
         self.ca.set_pv_value("CURR:SP", 5.4321)
 
-        self.ca.assert_that_pv_is("ILK:SPARE1", "Ok")  # Reset should happen first and relatively quickly
+        self.ca.assert_that_pv_is(
+            "ILK:SPARE1", "Ok"
+        )  # Reset should happen first and relatively quickly
 
         # Assert that power is not being changed while reset is being waited for
         self.ca.assert_that_pv_is("POWER", "Off")
-        self.ca.assert_that_pv_value_is_unchanged("POWER", wait=INRUSH_WAIT_TIME/2.)
+        self.ca.assert_that_pv_value_is_unchanged("POWER", wait=INRUSH_WAIT_TIME / 2.0)
         # Now assert that power does get turned on once the appropriate wait is complete
         self.ca.assert_that_pv_is("POWER", "On", timeout=INRUSH_WAIT_TIME)
 
         # Current should still not have been set yet
         self.ca.assert_that_pv_is("CURR", 0)
         self.ca.assert_that_pv_is("CURR:SP:RBV", 0)
-        self.ca.assert_that_pv_value_is_unchanged("CURR", wait=INRUSH_WAIT_TIME/2.)
+        self.ca.assert_that_pv_value_is_unchanged("CURR", wait=INRUSH_WAIT_TIME / 2.0)
 
         # Then after another appropriate wait (waiting for power) then current is set
         self.ca.assert_that_pv_is_number("CURR", 5.4321, tolerance=0.01, timeout=INRUSH_WAIT_TIME)
@@ -273,6 +301,3 @@ class TranstechnikTests(unittest.TestCase):
         self.ca.assert_that_pv_is("POWER", "On")
         self.ca.assert_that_pv_is_number("CURR", 5.4321, tolerance=0.01)
         self.ca.assert_that_pv_is_number("CURR:SP:RBV", 5.4321, tolerance=0.01)
-
-
-
