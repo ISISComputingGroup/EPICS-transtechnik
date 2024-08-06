@@ -1,7 +1,8 @@
 from lewis.adapters.stream import StreamInterface
-from lewis.utils.command_builder import CmdBuilder
 from lewis.core.logging import has_log
+from lewis.utils.command_builder import CmdBuilder
 from lewis.utils.replies import conditional_reply
+
 from ..device import INTERLOCKS
 
 
